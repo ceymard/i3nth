@@ -1,10 +1,12 @@
 package main
 
 import (
+	"log"
+	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 
-	"github.com/k0kubun/pp"
 	"go.i3wm.org/i3/v4"
 )
 
@@ -105,23 +107,59 @@ func gotoNth(nth int) {
 	}
 }
 
+var reNth = regexp.MustCompile(`nop wg nth (\d+)`)
+var reChangeGroup = regexp.MustCompile(`nop wg change(?: +(.+))?`)
+var reRenameGroup = regexp.MustCompile(`nop wg rename(?: +(.+))?`)
+
+func handleBinding(v *i3.BindingEvent) error {
+	if !strings.HasPrefix(v.Binding.Command, "nop wg") {
+		return nil
+	}
+	var cmd = v.Binding.Command
+	log.Print(cmd)
+
+	// Handle focus nth command
+	if match := reNth.FindStringSubmatch(cmd); match != nil {
+		nth, _ := strconv.Atoi(match[1])
+		gotoNth(nth)
+		return nil
+	}
+
+	if match := reChangeGroup.FindStringSubmatch(cmd); match != nil {
+		log.Print("received change")
+		if len(match[1]) > 0 {
+			activateGroup(match[1])
+		} else {
+			trySwitchToGroup()
+		}
+		return nil
+	}
+
+	if match := reRenameGroup.FindStringSubmatch(cmd); match != nil {
+		if len(match[1]) > 0 {
+			renameCurrentGroup(match[1])
+		} else {
+			tryRenameCurrentGroup()
+		}
+		return nil
+	}
+
+	// Handle
+
+	return nil
+}
+
 func main() {
-	// pp.Print(i3.GetVersion())
-
-	pp.Print(i3.GetConfig())
-
 	rec := i3.Subscribe("binding")
 	// i3.RunCommand()
 
 	for rec.Next() {
 		evt := rec.Event()
-		if b, ok := evt.(*i3.BindingEvent); ok {
-			if b.Binding.Command == "nop switch" {
-				if nth, err := strconv.Atoi(b.Binding.Symbol); err == nil {
-					// log.Print("Switch to ", nth)
-					gotoNth(nth)
-				}
-			}
+
+		switch v := evt.(type) {
+
+		case *i3.BindingEvent:
+			handleBinding(v)
 		}
 	}
 }
