@@ -48,6 +48,12 @@ bindsym $mod+P nop i3nth change
 bindsym $mod+Y nop i3nth rename
 ```
 
+Also, do not forget to run it as a daemon !
+
+```
+exec_always --no-startup-id $HOME/go/bin/i3nth
+```
+
 # Why rofi ?
 
 Because I have it installed, I like it, and it was convenient to do so to have something working fast.
