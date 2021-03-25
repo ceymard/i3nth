@@ -10,6 +10,15 @@ I3nth is a tool written in golang that provides the following commands for use w
 - `nop i3nth rename-group [newname]` : rename the currently active group to `newname`. If no name is provided,
     `rofi` is brought up as an input prompt
 
+When changing "groups", i3nth takes all the currently active workspaces and renames them to include
+the previous group name. It also scans all the workspaces that exist and renames those that match
+the new current group to their old name and displays them back if they existed.
+
+If there was no workspace associated to the new group on a given screen, then i3nth will try to switch to a new
+workspace with the same name as the one that was there before, this displaying a new empty workspace.
+
+For now, there is no way to send a window to another workspace to another group, although this will probably added in the future.
+
 # Installation
 
 At this time there are no pre-built binaries available. This could change if there is demand for it.
@@ -44,3 +53,8 @@ bindsym $mod+Y nop i3nth rename
 Because I have it installed, I like it, and it was convenient to do so to have something working fast.
 As this tool was mostly intended for me, I did not push it as far as allowing other methods, although this
 could change if there is interest.
+
+# Quirks
+
+At the time of this writing, the workspaces that are renamed do not appear anymore, probably due to the
+way i3-rocks interprets pango strings that have extraneous attributes. This suits me, but it it might not suit you.

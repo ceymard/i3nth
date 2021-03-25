@@ -99,6 +99,7 @@ func activateGroup(newgroup string) {
 
 	var cmds = make([]string, 0)
 	var activated = make(map[string]struct{})
+	var previously_activated = make(map[string]string)
 
 	for _, w := range wk {
 		var match = reGroupName.FindStringSubmatch(w.Name)
@@ -110,6 +111,7 @@ func activateGroup(newgroup string) {
 			var visible = ""
 			if w.Visible {
 				visible = ` visible=''`
+				previously_activated[w.Output] = w.Name
 			}
 			// If they don't match the regexp, they're then assigned to current.
 			cmds = append(cmds, fmt.Sprintf(
@@ -140,12 +142,20 @@ func activateGroup(newgroup string) {
 		))
 
 		// And focus it if it's the first time we encounter it for a given X-Y position
-		var pos = fmt.Sprintf("%d-%d", w.Rect.X, w.Rect.Y)
+		var pos = w.Output
 		if _, ok := activated[pos]; !ok && visible {
 			cmds = append(cmds, fmt.Sprintf("workspace \"%s\"", oldname))
 			activated[pos] = struct{}{}
 		}
 
+	}
+
+	for output, name := range previously_activated {
+		if _, ok := activated[output]; !ok {
+			cmds = append(cmds, fmt.Sprintf(`focus output %s`, output))
+			cmds = append(cmds, fmt.Sprintf(`workspace "%s"`, name))
+			cmds = append(cmds, fmt.Sprintf(`move workspace to output %s`, output))
+		}
 	}
 
 	for _, c := range cmds {
