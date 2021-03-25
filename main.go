@@ -107,9 +107,9 @@ func gotoNth(nth int) {
 	}
 }
 
-var reNth = regexp.MustCompile(`nop wg nth (\d+)`)
-var reChangeGroup = regexp.MustCompile(`nop wg change(?: +(.+))?`)
-var reRenameGroup = regexp.MustCompile(`nop wg rename(?: +(.+))?`)
+var reNth = regexp.MustCompile(`nop i3nth nth (\d+)`)
+var reChangeGroup = regexp.MustCompile(`nop i3nth change(?: +(.+))?`)
+var reRenameGroup = regexp.MustCompile(`nop i3nth rename(?: +(.+))?`)
 
 func handleBinding(v *i3.BindingEvent) error {
 	if !strings.HasPrefix(v.Binding.Command, "nop wg") {
