@@ -20,7 +20,7 @@ import (
 var currentGroup = "default"
 
 // map[groupname]map[workspacename]outputname
-var reGroupName = regexp.MustCompile(`^<span group='([^']+)'[^>]*>❱</span>(.*)`)
+var reGroupName = regexp.MustCompile(`^<span group='([^']+)'( visible='')?[^>]*>❱</span>(.*)`)
 
 func tryRenameCurrentGroup() {
 	var cmd = exec.Command("rofi", "-dmenu", "-mesg", fmt.Sprintf("Current group is '%s' Enter a new group name", currentGroup))
@@ -107,11 +107,15 @@ func activateGroup(newgroup string) {
 			if current == newgroup {
 				continue
 			}
+			var visible = ""
+			if w.Visible {
+				visible = ` visible=''`
+			}
 			// If they don't match the regexp, they're then assigned to current.
 			cmds = append(cmds, fmt.Sprintf(
 				"rename workspace \"%s\" to \"%s\"",
 				w.Name,
-				fmt.Sprintf(`<span group='%s'>❱</span>%s`, current, w.Name),
+				fmt.Sprintf(`<span group='%s'%s>❱</span>%s`, current, visible, w.Name),
 			))
 		}
 	}
@@ -125,17 +129,20 @@ func activateGroup(newgroup string) {
 			continue
 		}
 
+		var visible = match[2] != ""
+		var oldname = match[3]
+
 		// Otherwise, rename it to its "ungrouped" version.
 		cmds = append(cmds, fmt.Sprintf(
 			"rename workspace \"%s\" to \"%s\"",
 			w.Name,
-			match[2],
+			oldname,
 		))
 
 		// And focus it if it's the first time we encounter it for a given X-Y position
 		var pos = fmt.Sprintf("%d-%d", w.Rect.X, w.Rect.Y)
-		if _, ok := activated[pos]; !ok {
-			cmds = append(cmds, fmt.Sprintf("workspace \"%s\"", match[2]))
+		if _, ok := activated[pos]; !ok && visible {
+			cmds = append(cmds, fmt.Sprintf("workspace \"%s\"", oldname))
 			activated[pos] = struct{}{}
 		}
 

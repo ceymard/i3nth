@@ -112,7 +112,7 @@ var reChangeGroup = regexp.MustCompile(`nop i3nth change(?: +(.+))?`)
 var reRenameGroup = regexp.MustCompile(`nop i3nth rename(?: +(.+))?`)
 
 func handleBinding(v *i3.BindingEvent) error {
-	if !strings.HasPrefix(v.Binding.Command, "nop wg") {
+	if !strings.HasPrefix(v.Binding.Command, "nop i3nth") {
 		return nil
 	}
 	var cmd = v.Binding.Command
