@@ -12,12 +12,14 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 
 	"go.i3wm.org/i3/v4"
 )
 
 var currentGroup = "default"
+var previousGroup = "default"
 
 // map[groupname]map[workspacename]outputname
 var reGroupName = regexp.MustCompile(`^<span group='([^']+)'( visible='')?[^>]*>❱</span>(.*)`)
@@ -68,6 +70,16 @@ func trySwitchToGroup() {
 		log.Print(err2)
 		return
 	}
+	sort.Strings(groups)
+	if previousGroup != currentGroup {
+		var _g = []string{previousGroup}
+		for _, g := range groups {
+			if g != previousGroup {
+				_g = append(_g, g)
+			}
+		}
+		groups = _g
+	}
 	for i, g := range groups {
 		if i > 0 {
 			_, _ = stdin.Write([]byte{'\n'})
@@ -91,6 +103,7 @@ func renameCurrentGroup(newgroup string) {
 
 func activateGroup(newgroup string) {
 	// how do we know the current group name ?
+	previousGroup = currentGroup
 	var current = currentGroup
 	var wk, err = i3.GetWorkspaces()
 	if err != nil {
