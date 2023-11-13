@@ -3,14 +3,13 @@ package main
 import (
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
 	"go.i3wm.org/i3/v4"
 )
 
-///////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////
 type Set struct {
 	mp map[string]struct{}
 }
@@ -31,7 +30,7 @@ func (s *Set) Has(str string) bool {
 
 ///////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////
 type nodesByX []*i3.Node
 
 func (s nodesByX) Len() int {
@@ -40,18 +39,24 @@ func (s nodesByX) Len() int {
 func (s nodesByX) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-func (s nodesByX) Less(i, j int) bool {
-	return s[i].Rect.X < s[j].Rect.X
-}
 
 ///////////////////////////////////////////////////////////
 
 // filter a Tree on a condition
 func filterTree(node *i3.Node, fn func(node *i3.Node) bool) []*i3.Node {
 	var res []*i3.Node
-	for _, n := range node.Nodes {
-		res = append(res, filterTree(n, fn)...)
+
+	// floating nodes take precedence over non floating !
+	if len(node.FloatingNodes) > 0 {
+		for _, n := range node.FloatingNodes {
+			res = append(res, filterTree(n, fn)...)
+		}
+	} else {
+		for _, n := range node.Nodes {
+			res = append(res, filterTree(n, fn)...)
+		}
 	}
+
 	if fn(node) {
 		res = append(res, node)
 	}
@@ -88,6 +93,8 @@ func gotoNth(nth int) {
 		return
 	}
 
+	// spew.Dump(tree)
+
 	// Get the nodes that are workspaces
 	workspaceNodes = filterTree(tree.Root, func(n *i3.Node) bool {
 		return n.Type == "workspace" && visibleWrk.Has(n.Name)
@@ -100,7 +107,7 @@ func gotoNth(nth int) {
 	}
 
 	// Now that we have the clients, we order them by ascending x coordinates
-	sort.Sort(nodesByX(clients))
+	// sort.Sort(nodesByX(clients))
 
 	if nth > 0 && nth <= len(clients) {
 		i3.RunCommand("[con_id=" + strconv.FormatInt(int64(clients[nth-1].ID), 10) + "] focus")

@@ -34,6 +34,7 @@ func tryRenameCurrentGroup() {
 	if out != "" {
 		renameCurrentGroup(out)
 	}
+	log.Print(out)
 }
 
 // Find returns the smallest index i at which x == a[i],
@@ -71,15 +72,19 @@ func trySwitchToGroup() {
 		return
 	}
 	sort.Strings(groups)
+	var _g = []string{}
 	if previousGroup != currentGroup {
-		var _g = []string{previousGroup}
-		for _, g := range groups {
-			if g != previousGroup {
-				_g = append(_g, g)
-			}
-		}
-		groups = _g
+		_g = append(_g, previousGroup)
 	}
+
+	for _, g := range groups {
+		if g != previousGroup && g != currentGroup {
+			_g = append(_g, g)
+		}
+	}
+
+	groups = _g
+
 	for i, g := range groups {
 		if i > 0 {
 			_, _ = stdin.Write([]byte{'\n'})
@@ -98,11 +103,18 @@ func trySwitchToGroup() {
 }
 
 func renameCurrentGroup(newgroup string) {
+	if currentGroup == previousGroup {
+		previousGroup = newgroup
+	}
 	currentGroup = newgroup
 }
 
 func activateGroup(newgroup string) {
 	// how do we know the current group name ?
+	if newgroup == currentGroup {
+		return
+	}
+
 	previousGroup = currentGroup
 	var current = currentGroup
 	var wk, err = i3.GetWorkspaces()
@@ -173,9 +185,16 @@ func activateGroup(newgroup string) {
 
 	for _, c := range cmds {
 		log.Print(c)
+		var cmdres, err = i3.RunCommand(c)
+		if err != nil {
+			log.Print("error: ", err)
+		}
+		for _, r := range cmdres {
+			log.Print(r)
+		}
 	}
 	currentGroup = newgroup
-	if len(cmds) > 0 {
-		i3.RunCommand(strings.Join(cmds, ";"))
-	}
+	// if len(cmds) > 0 {
+	// i3.RunCommand(strings.Join(cmds, ";"))
+	// }
 }
