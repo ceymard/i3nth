@@ -45,13 +45,22 @@ func (s nodesByX) Swap(i, j int) {
 // filter a Tree on a condition
 func filterTree(node *i3.Node, fn func(node *i3.Node) bool) []*i3.Node {
 	var res []*i3.Node
+	var floating_res []*i3.Node
+	var found_windows bool
 
-	// floating nodes take precedence over non floating !
+	// floating nodes take precedence over non floating, but only if we find nodes that match the request
 	if len(node.FloatingNodes) > 0 {
 		for _, n := range node.FloatingNodes {
-			res = append(res, filterTree(n, fn)...)
+			floating_res = append(floating_res, filterTree(n, fn)...)
 		}
-	} else {
+
+		if len(floating_res) > 0 {
+			res = append(res, floating_res...)
+			found_windows = true
+		}
+	}
+
+	if !found_windows {
 		for _, n := range node.Nodes {
 			res = append(res, filterTree(n, fn)...)
 		}
@@ -102,7 +111,7 @@ func gotoNth(nth int) {
 
 	for _, w := range workspaceNodes {
 		clients = append(clients, filterTree(w, func(n *i3.Node) bool {
-			return len(n.Nodes) == 0 && n.Type == "con"
+			return len(n.Nodes) == 0 && n.Type == "con" && n.WindowType == "normal"
 		})...)
 	}
 
