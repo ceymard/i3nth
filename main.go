@@ -42,6 +42,15 @@ func (s nodesByX) Swap(i, j int) {
 
 ///////////////////////////////////////////////////////////
 
+func hasFocus(nodes []*i3.Node) bool {
+	for _, node := range nodes {
+		if node.Focused {
+			return true
+		}
+	}
+	return false
+}
+
 // filter a Tree on a condition
 func filterTree(node *i3.Node, fn func(node *i3.Node) bool) []*i3.Node {
 	var res []*i3.Node
@@ -54,7 +63,7 @@ func filterTree(node *i3.Node, fn func(node *i3.Node) bool) []*i3.Node {
 			floating_res = append(floating_res, filterTree(n, fn)...)
 		}
 
-		if len(floating_res) > 0 {
+		if len(floating_res) > 0 && hasFocus(floating_res) {
 			res = append(res, floating_res...)
 			found_windows = true
 		}
